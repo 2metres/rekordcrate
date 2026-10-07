@@ -113,7 +113,7 @@ pub struct Table {
     /// Unknown field, maybe links to a chain of empty pages if the database is ever garbage
     /// collected (?).
     #[allow(dead_code)]
-    empty_candidate: u32,
+    pub empty_candidate: u32,
     /// Index of the first page that belongs to this table.
     ///
     /// *Note:* The first page apparently does not contain any rows. If the table is non-empty, the
@@ -131,7 +131,7 @@ pub struct Header {
     /// Unknown purpose, perhaps an unoriginal signature, seems to always have the value 0.
     #[br(temp, assert(unknown1 == 0))]
     #[bw(calc = 0u32)]
-    unknown1: u32,
+    pub unknown1: u32,
     /// Size of a single page in bytes.
     ///
     /// The byte offset of a page can be calculated by multiplying a page index with this value.
@@ -139,19 +139,19 @@ pub struct Header {
     /// Number of tables.
     #[br(temp)]
     #[bw(calc = tables.len().try_into().expect("too many tables"))]
-    num_tables: u32,
+    pub num_tables: u32,
     /// Unknown field, not used as any `empty_candidate`, points past end of file.
     #[allow(dead_code)]
-    next_unused_page: PageIndex,
+    pub next_unused_page: PageIndex,
     /// Unknown field.
     #[allow(dead_code)]
-    unknown: u32,
+    pub unknown: u32,
     /// Always incremented by at least one, sometimes by two or three.
     pub sequence: u32,
     /// The gap seems to be always zero.
     #[br(temp, assert(gap == 0))]
     #[bw(calc = 0u32)]
-    gap: u32,
+    pub gap: u32,
     /// Each table is a linked list of pages containing rows of a particular type.
     #[br(count = num_tables)]
     pub tables: Vec<Table>,
@@ -225,10 +225,10 @@ pub struct Page {
     pub next_page: PageIndex,
     /// Unknown field.
     #[allow(dead_code)]
-    unknown1: u32,
+    pub unknown1: u32,
     /// Unknown field.
     #[allow(dead_code)]
-    unknown2: u32,
+    pub unknown2: u32,
     /// Number of rows in this table (8-bit version).
     ///
     /// Used if `num_rows_large` not greater than this value and not equal to `0x1FFF`, which means
@@ -239,18 +239,18 @@ pub struct Page {
     /// According to [@flesniak](https://github.com/flesniak):
     /// > a bitmask (first track: 32)
     #[allow(dead_code)]
-    unknown3: u8,
+    pub unknown3: u8,
     /// Unknown field.
     ///
     /// According to [@flesniak](https://github.com/flesniak):
     /// > often 0, sometimes larger, esp. for pages with high real_entry_count (e.g. 12 for 101 entries)
     #[allow(dead_code)]
-    unknown4: u8,
+    pub unknown4: u8,
     /// Page flags.
     ///
     /// According to [@flesniak](https://github.com/flesniak):
     /// > strange pages: 0x44, 0x64; otherwise seen: 0x24, 0x34
-    page_flags: PageFlags,
+    pub page_flags: PageFlags,
     /// Free space in bytes in the data section of the page (excluding the row offsets in the page footer).
     pub free_size: u16,
     /// Used space in bytes in the data section of the page.
@@ -260,7 +260,7 @@ pub struct Page {
     /// According to [@flesniak](https://github.com/flesniak):
     /// > (0->1: 2)
     #[allow(dead_code)]
-    unknown5: u16,
+    pub unknown5: u16,
     /// Number of rows in this table (16-bit version).
     ///
     /// Used when the number of rows does not fit into a single byte. In that case,`num_rows_large`
@@ -268,25 +268,25 @@ pub struct Page {
     pub num_rows_large: u16,
     /// Unknown field.
     #[allow(dead_code)]
-    unknown6: u16,
+    pub unknown6: u16,
     /// Unknown field.
     ///
     /// According to [@flesniak](https://github.com/flesniak):
     /// > always 0, except 1 for history pages, num entries for strange pages?"
     #[allow(dead_code)]
-    unknown7: u16,
+    pub unknown7: u16,
     /// Number of rows in this page.
     ///
     /// **Note:** This is a virtual field and not actually read from the file.
     #[br(temp)]
     #[br(calc = if num_rows_large > num_rows_small.into() && num_rows_large != 0x1fff { num_rows_large } else { num_rows_small.into() })]
-    num_rows: u16,
+    pub num_rows: u16,
     /// The offset at which the row data for this page are located.
     ///
     /// **Note:** This is a virtual field and not actually read from the file.
     #[br(temp)]
     #[br(calc = page_index.offset(page_size) + u64::from(Self::HEADER_SIZE))]
-    page_heap_offset: u64,
+    pub page_heap_offset: u64,
     /// Row groups belonging to this page.
     #[br(seek_before(SeekFrom::Current(i64::from(page_size) - i64::from(Self::HEADER_SIZE))), restore_position)]
     #[br(parse_with = Self::parse_row_groups, args(page_type, page_heap_offset, num_rows, page_flags))]
@@ -362,12 +362,12 @@ pub struct RowGroup {
     /// An offset which points to a row in the table, whose actual presence is controlled by one of the
     /// bits in `row_present_flags`. This instance allows the row itself to be lazily loaded, unless it
     /// is not present, in which case there is no content to be loaded.
-    rows: [Option<FilePtr16<Row>>; Self::MAX_ROW_COUNT],
-    row_presence_flags: u16,
+    pub rows: [Option<FilePtr16<Row>>; Self::MAX_ROW_COUNT],
+    pub row_presence_flags: u16,
     /// Unknown field, probably padding.
     ///
     /// Apparently this is not always zero, so it might also be something different.
-    unknown: u16,
+    pub unknown: u16,
 }
 
 impl RowGroup {
@@ -513,24 +513,24 @@ pub struct Album {
     /// **Note:** This is a virtual field and not actually read from the file.
     #[br(temp, parse_with = current_offset)]
     #[bw(ignore)]
-    base_offset: u64,
+    pub base_offset: u64,
     /// Unknown field, usually `80 00`.
-    unknown1: u16,
+    pub unknown1: u16,
     /// Unknown field, called `index_shift` by [@flesniak](https://github.com/flesniak).
-    index_shift: u16,
+    pub index_shift: u16,
     /// Unknown field.
-    unknown2: u32,
+    pub unknown2: u32,
     /// ID of the artist row associated with this row.
-    artist_id: ArtistId,
+    pub artist_id: ArtistId,
     /// ID of this row.
-    id: AlbumId,
+    pub id: AlbumId,
     /// Unknown field.
-    unknown3: u32,
+    pub unknown3: u32,
     /// Unknown field.
-    unknown4: u8,
+    pub unknown4: u8,
     /// Album name String
     #[br(offset = base_offset, parse_with = FilePtr8::parse)]
-    name: DeviceSQLString,
+    pub name: DeviceSQLString,
 }
 
 /// Contains the artist name and ID.
@@ -539,25 +539,25 @@ pub struct Album {
 #[brw(little)]
 pub struct Artist {
     /// Determines if the `name` string is located at the 8-bit offset (0x60) or the 16-bit offset (0x64).
-    subtype: u16,
+    pub subtype: u16,
     /// Unknown field, called `index_shift` by [@flesniak](https://github.com/flesniak).
-    index_shift: u16,
+    pub index_shift: u16,
     /// ID of this row.
-    id: ArtistId,
+    pub id: ArtistId,
     /// Unknown field.
-    unknown1: u8,
+    pub unknown1: u8,
     /// One-byte name offset used if `subtype` is `0x60`.
-    ofs_name_near: u8,
+    pub ofs_name_near: u8,
     /// Two-byte name offset used if `subtype` is `0x64`.
     ///
     /// In that case, the value of `ofs_name_near` is ignored
     #[br(if(subtype == 0x64))]
-    ofs_name_far: Option<u16>,
+    pub ofs_name_far: Option<u16>,
     /// Name of this artist.
     #[br(seek_before = Artist::calculate_name_seek(ofs_name_near, &ofs_name_far))]
     #[bw(seek_before = Artist::calculate_name_seek(*ofs_name_near, ofs_name_far))]
     #[brw(restore_position)]
-    name: DeviceSQLString,
+    pub name: DeviceSQLString,
 }
 
 impl Artist {
@@ -573,9 +573,9 @@ impl Artist {
 #[brw(little)]
 pub struct Artwork {
     /// ID of this row.
-    id: ArtworkId,
+    pub id: ArtworkId,
     /// Path to the album art file.
-    path: DeviceSQLString,
+    pub path: DeviceSQLString,
 }
 
 /// Contains numeric color ID
@@ -584,15 +584,15 @@ pub struct Artwork {
 #[brw(little)]
 pub struct Color {
     /// Unknown field.
-    unknown1: u32,
+    pub unknown1: u32,
     /// Unknown field.
-    unknown2: u8,
+    pub unknown2: u8,
     /// Numeric color ID
-    color: ColorIndex,
+    pub color: ColorIndex,
     /// Unknown field.
-    unknown3: u16,
+    pub unknown3: u16,
     /// User-defined name of the color.
-    name: DeviceSQLString,
+    pub name: DeviceSQLString,
 }
 
 /// Represents a musical genre.
@@ -601,9 +601,9 @@ pub struct Color {
 #[brw(little)]
 pub struct Genre {
     /// ID of this row.
-    id: GenreId,
+    pub id: GenreId,
     /// Name of the genre.
-    name: DeviceSQLString,
+    pub name: DeviceSQLString,
 }
 
 /// Represents a history playlist.
@@ -612,9 +612,9 @@ pub struct Genre {
 #[brw(little)]
 pub struct HistoryPlaylist {
     /// ID of this row.
-    id: HistoryPlaylistId,
+    pub id: HistoryPlaylistId,
     /// Name of the playlist.
-    name: DeviceSQLString,
+    pub name: DeviceSQLString,
 }
 
 /// Represents a history playlist.
@@ -623,11 +623,11 @@ pub struct HistoryPlaylist {
 #[brw(little)]
 pub struct HistoryEntry {
     /// ID of the track played at this position in the playlist.
-    track_id: TrackId,
+    pub track_id: TrackId,
     /// ID of the history playlist.
-    playlist_id: HistoryPlaylistId,
+    pub playlist_id: HistoryPlaylistId,
     /// Position within the playlist.
-    entry_index: u32,
+    pub entry_index: u32,
 }
 
 /// Represents a musical key.
@@ -636,11 +636,11 @@ pub struct HistoryEntry {
 #[brw(little)]
 pub struct Key {
     /// ID of this row.
-    id: KeyId,
+    pub id: KeyId,
     /// Apparently a second copy of the row ID.
-    id2: u32,
+    pub id2: u32,
     /// Name of the key.
-    name: DeviceSQLString,
+    pub name: DeviceSQLString,
 }
 
 /// Represents a record label.
@@ -649,9 +649,9 @@ pub struct Key {
 #[brw(little)]
 pub struct Label {
     /// ID of this row.
-    id: LabelId,
+    pub id: LabelId,
     /// Name of the record label.
-    name: DeviceSQLString,
+    pub name: DeviceSQLString,
 }
 
 /// Represents a node in the playlist tree (either a folder or a playlist).
@@ -662,13 +662,13 @@ pub struct PlaylistTreeNode {
     /// ID of parent row of this row (which means that the parent is a folder).
     pub parent_id: PlaylistTreeNodeId,
     /// Unknown field.
-    unknown: u32,
+    pub unknown: u32,
     /// Sort order indicastor.
-    sort_order: u32,
+    pub sort_order: u32,
     /// ID of this row.
     pub id: PlaylistTreeNodeId,
     /// Indicates if the node is a folder. Non-zero if it's a leaf node, i.e. a playlist.
-    node_is_folder: u32,
+    pub node_is_folder: u32,
     /// Name of this node, as shown when navigating the menu.
     pub name: DeviceSQLString,
 }
@@ -687,11 +687,11 @@ impl PlaylistTreeNode {
 #[brw(little)]
 pub struct PlaylistEntry {
     /// Position within the playlist.
-    entry_index: u32,
+    pub entry_index: u32,
     /// ID of the track played at this position in the playlist.
-    track_id: TrackId,
+    pub track_id: TrackId,
     /// ID of the playlist.
-    playlist_id: PlaylistTreeNodeId,
+    pub playlist_id: PlaylistTreeNodeId,
 }
 
 /// Contains the kinds of Metadata Categories tracks can be browsed by
@@ -704,10 +704,10 @@ pub struct ColumnEntry {
     // make sense as I don't think there are references to these
     // rows anywhere else. This could be a stable ID to identify
     // a category by in hardware (instead of by name).
-    id: u16,
+    pub id: u16,
     // Maybe a bitfield containing infos on sort order and which
     // columns are displayed.
-    unknown0: u16,
+    pub unknown0: u16,
     /// TODO Contained string is prefixed by the "interlinear annotation"
     /// characters "\u{fffa}" and postfixed with "\u{fffb}" for some reason?!
     /// Contained strings are actually `DeviceSQLString::LongBody` even though
@@ -726,132 +726,132 @@ pub struct Track {
     ///
     /// **Note:** This is a virtual field and not actually read from the file.
     #[br(temp, parse_with = current_offset)]
-    base_offset: u64,
+    pub base_offset: u64,
     /// Unknown field, usually `24 00`.
-    unknown1: u16,
+    pub unknown1: u16,
     /// Unknown field, called `index_shift` by [@flesniak](https://github.com/flesniak).
-    index_shift: u16,
+    pub index_shift: u16,
     /// Unknown field, called `bitmask` by [@flesniak](https://github.com/flesniak).
-    bitmask: u32,
+    pub bitmask: u32,
     /// Sample Rate in Hz.
-    sample_rate: u32,
+    pub sample_rate: u32,
     /// Composer of this track as artist row ID (non-zero if set).
-    composer_id: ArtistId,
+    pub composer_id: ArtistId,
     /// File size in bytes.
-    file_size: u32,
+    pub file_size: u32,
     /// Unknown field (maybe another ID?)
-    unknown2: u32,
+    pub unknown2: u32,
     /// Unknown field ("always 19048?" according to [@flesniak](https://github.com/flesniak))
-    unknown3: u16,
+    pub unknown3: u16,
     /// Unknown field ("always 30967?" according to [@flesniak](https://github.com/flesniak))
-    unknown4: u16,
+    pub unknown4: u16,
     /// Artwork row ID for the cover art (non-zero if set),
-    artwork_id: ArtworkId,
+    pub artwork_id: ArtworkId,
     /// Key row ID for the cover art (non-zero if set).
-    key_id: KeyId,
+    pub key_id: KeyId,
     /// Artist row ID of the original performer (non-zero if set).
-    orig_artist_id: ArtistId,
+    pub orig_artist_id: ArtistId,
     /// Label row ID of the original performer (non-zero if set).
-    label_id: LabelId,
+    pub label_id: LabelId,
     /// Artist row ID of the remixer (non-zero if set).
-    remixer_id: ArtistId,
+    pub remixer_id: ArtistId,
     /// Bitrate of the track.
-    bitrate: u32,
+    pub bitrate: u32,
     /// Track number of the track.
-    track_number: u32,
+    pub track_number: u32,
     /// Track tempo in centi-BPM (= 1/100 BPM).
-    tempo: u32,
+    pub tempo: u32,
     /// Genre row ID for this track (non-zero if set).
-    genre_id: GenreId,
+    pub genre_id: GenreId,
     /// Album row ID for this track (non-zero if set).
-    album_id: AlbumId,
+    pub album_id: AlbumId,
     /// Artist row ID for this track (non-zero if set).
-    artist_id: ArtistId,
+    pub artist_id: ArtistId,
     /// Row ID of this track (non-zero if set).
-    id: TrackId,
+    pub id: TrackId,
     /// Disc number of this track (non-zero if set).
-    disc_number: u16,
+    pub disc_number: u16,
     /// Number of times this track was played.
-    play_count: u16,
+    pub play_count: u16,
     /// Year this track was released.
-    year: u16,
+    pub year: u16,
     /// Bits per sample of the track aduio file.
-    sample_depth: u16,
+    pub sample_depth: u16,
     /// Playback duration of this track in seconds (at normal speed).
-    duration: u16,
+    pub duration: u16,
     /// Unknown field, apparently always "29".
-    unknown5: u16,
+    pub unknown5: u16,
     /// Color row ID for this track (non-zero if set).
-    color: ColorIndex,
+    pub color: ColorIndex,
     /// User rating of this track (0 to 5 starts).
-    rating: u8,
+    pub rating: u8,
     /// Unknown field, apparently always "1".
-    unknown6: u16,
+    pub unknown6: u16,
     /// Unknown field (alternating "2" and "3"?).
-    unknown7: u16,
+    pub unknown7: u16,
     /// International Standard Recording Code (ISRC), in mangled format.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    isrc: DeviceSQLString,
+    pub isrc: DeviceSQLString,
     /// Unknown string field.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string1: DeviceSQLString,
+    pub unknown_string1: DeviceSQLString,
     /// Unknown string field.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string2: DeviceSQLString,
+    pub unknown_string2: DeviceSQLString,
     /// Unknown string field.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string3: DeviceSQLString,
+    pub unknown_string3: DeviceSQLString,
     /// Unknown string field.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string4: DeviceSQLString,
+    pub unknown_string4: DeviceSQLString,
     /// Unknown string field (named by [@flesniak](https://github.com/flesniak)).
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    message: DeviceSQLString,
+    pub message: DeviceSQLString,
     /// Probably describes whether the track is public on kuvo.com (?). Value is either "ON" or empty string.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    kuvo_public: DeviceSQLString,
+    pub kuvo_public: DeviceSQLString,
     /// Determines if hotcues should be autoloaded. Value is either "ON" or empty string.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    autoload_hotcues: DeviceSQLString,
+    pub autoload_hotcues: DeviceSQLString,
     /// Unknown string field.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string5: DeviceSQLString,
+    pub unknown_string5: DeviceSQLString,
     /// Unknown string field (usually empty).
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string6: DeviceSQLString,
+    pub unknown_string6: DeviceSQLString,
     /// Date when the track was added to the Rekordbox collection.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    date_added: DeviceSQLString,
+    pub date_added: DeviceSQLString,
     /// Date when the track was released.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    release_date: DeviceSQLString,
+    pub release_date: DeviceSQLString,
     /// Name of the remix (if any).
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    mix_name: DeviceSQLString,
+    pub mix_name: DeviceSQLString,
     /// Unknown string field (usually empty).
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string7: DeviceSQLString,
+    pub unknown_string7: DeviceSQLString,
     /// File path of the track analysis file.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    analyze_path: DeviceSQLString,
+    pub analyze_path: DeviceSQLString,
     /// Date when the track analysis was performed.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    analyze_date: DeviceSQLString,
+    pub analyze_date: DeviceSQLString,
     /// Track comment.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    comment: DeviceSQLString,
+    pub comment: DeviceSQLString,
     /// Track title.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    title: DeviceSQLString,
+    pub title: DeviceSQLString,
     /// Unknown string field (usually empty).
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    unknown_string8: DeviceSQLString,
+    pub unknown_string8: DeviceSQLString,
     /// Name of the file.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    filename: DeviceSQLString,
+    pub filename: DeviceSQLString,
     /// Path of the file.
     #[br(offset = base_offset, parse_with = FilePtr16::parse)]
-    file_path: DeviceSQLString,
+    pub file_path: DeviceSQLString,
 }
 
 // #[bw(little)] on #[binread] types does
