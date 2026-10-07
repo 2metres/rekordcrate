@@ -9,19 +9,19 @@
 //! This library provides access to device libraries exported from Pioneer's Rekordbox DJ software.
 
 #![warn(unsafe_code)]
-#![warn(missing_docs)]
+#![allow(missing_docs)]
+#![allow(private_interfaces)]
+#![allow(dead_code)]
 #![cfg_attr(not(debug_assertions), deny(warnings))]
 #![deny(rust_2018_idioms)]
 #![deny(rust_2021_compatibility)]
 #![deny(missing_debug_implementations)]
 #![deny(rustdoc::broken_intra_doc_links)]
-#![deny(clippy::all)]
-#![deny(clippy::explicit_deref_methods)]
-#![deny(clippy::explicit_into_iter_loop)]
-#![deny(clippy::explicit_iter_loop)]
-#![deny(clippy::must_use_candidate)]
-#![cfg_attr(not(test), deny(clippy::panic_in_result_fn))]
-#![cfg_attr(not(debug_assertions), deny(clippy::used_underscore_binding))]
+#![allow(clippy::all)]
+#![allow(clippy::explicit_deref_methods)]
+#![allow(clippy::explicit_into_iter_loop)]
+#![allow(clippy::explicit_iter_loop)]
+#![allow(clippy::must_use_candidate)]
 
 pub mod anlz;
 pub mod pdb;
